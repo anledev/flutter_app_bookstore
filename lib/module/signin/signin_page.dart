@@ -81,6 +81,7 @@ class SignInFormWidget extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 15),
       child: TextFormField(
+        textInputAction: TextInputAction.next,
         controller: _txtPhoneController,
         cursorColor: Colors.black,
         keyboardType: TextInputType.phone,
@@ -98,6 +99,7 @@ class SignInFormWidget extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 25),
       child: TextFormField(
+        textInputAction: TextInputAction.done,
         controller: _txtPassController,
         obscureText: true,
         cursorColor: Colors.black,
