@@ -5,7 +5,7 @@ import 'package:flutter_book_store_sample/shared/constant.dart';
 
 class BookClient {
   static BaseOptions _options = new BaseOptions(
-    baseUrl: "http://localhost:8000",
+    baseUrl: "http://192.168.1.7:8000/",
     connectTimeout: 5000,
     receiveTimeout: 3000,
   );
