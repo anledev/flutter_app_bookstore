@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_book_store_sample/base/base_widget.dart';
 import 'package:flutter_book_store_sample/data/remote/user_service.dart';
 import 'package:flutter_book_store_sample/data/repo/user_repo.dart';
-import 'package:flutter_book_store_sample/event/singin_event.dart';
-import 'package:flutter_book_store_sample/module/signin/signin_bloc.dart';
+import 'package:flutter_book_store_sample/event/signup_event.dart';
+import 'package:flutter_book_store_sample/module/signup/signup_bloc.dart';
 import 'package:flutter_book_store_sample/shared/app_color.dart';
 import 'package:flutter_book_store_sample/shared/widget/normal_button.dart';
 import 'package:provider/provider.dart';
 
-class SignInPage extends StatelessWidget {
+class SignUpPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PageContainer(
-      title: "Sign In",
+      title: "Sign Up",
       di: [
         Provider.value(
           value: UserService(),
@@ -23,7 +23,7 @@ class SignInPage extends StatelessWidget {
         ),
       ],
       bloc: [],
-      child: SignInFormWidget(),
+      child: SignUpFormWidget(),
     );
     // return Container();
   }
@@ -31,51 +31,47 @@ class SignInPage extends StatelessWidget {
 
 class DemoDI {}
 
-class SignInFormWidget extends StatefulWidget {
-  @override
-  _SignInFormWidgetState createState() => _SignInFormWidgetState();
-}
-
-class _SignInFormWidgetState extends State<SignInFormWidget> {
+class SignUpFormWidget extends StatelessWidget {
+  final TextEditingController _txtDisplayNameController = TextEditingController();
   final TextEditingController _txtPhoneController = TextEditingController();
-
   final TextEditingController _txtPassController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    print('rebuild');
-    return Provider<SignInBloc>.value(
-      value: SignInBloc(userRepo: Provider.of(context)),
-      child: Consumer<SignInBloc>(
+    return Provider<SignUpBloc>.value(
+      value: SignUpBloc(userRepo: Provider.of(context)),
+      child: Consumer<SignUpBloc>(
         builder: (context, bloc, child) => Container(
-          child: viewOriginTut(context, bloc),
+          child: viewOriginTut(bloc),
         ),
       ),
     );
   }
 
-  Widget viewOriginTut(BuildContext context, SignInBloc bloc) {
+  Widget viewOriginTut(SignUpBloc bloc) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        _buildDisplayNameField(bloc),
         _buildPhoneField(bloc),
         _buildPassField(bloc),
-        _buildSignInButton(bloc),
-        _buildFooter(context)
+        _buildSignUpButton(bloc),
+        // _buildFooter()
       ],
     );
   }
 
-  Widget _buildSignInButton(SignInBloc bloc){
+  Widget _buildSignUpButton(SignUpBloc bloc){
     return StreamProvider<bool>.value(
       initialData: false,
       value: bloc.btnStream,
       child: Consumer<bool>(
         builder: (context, enable, child) => NormalButton(
-          title: 'Sign In',
+          title: 'Sign Up',
           onPressed: enable ? () {
             bloc.event.add(
-              SignInEvent(
+              SignUpEvent(
+                displayName: _txtDisplayNameController.text,
                 phone: _txtPhoneController.text,
                 pass: _txtPassController.text,
               ),
@@ -86,27 +82,48 @@ class _SignInFormWidgetState extends State<SignInFormWidget> {
     );
   }
 
-  Widget _buildFooter(BuildContext context) {
+  Widget _buildFooter() {
     return GestureDetector(
       child: Container(
         margin: EdgeInsets.only(top: 30),
         padding: EdgeInsets.all(10),
-        child: FlatButton(
-          onPressed: (){
-            Navigator.pushNamed(context, '/sign-up');
-          },
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4.0)),
-          child: Text(
-            'Register Account',
-            style: TextStyle(color: AppColor.blue, fontSize: 19),
+        child: Text(
+          'Register Account',
+          style: TextStyle(color: AppColor.blue, fontSize: 19),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDisplayNameField(SignUpBloc bloc) {
+    return StreamProvider<String>.value(
+      initialData: null,
+      value: bloc.displayNameStream,
+      child: Consumer<String>(
+        builder: (context, msg, child) => Container(
+          margin: EdgeInsets.only(bottom: 15),
+          child: TextField(
+            textInputAction: TextInputAction.next,
+            onChanged: (text) {
+              bloc.displayNameSink.add(text);
+            },
+            controller: _txtDisplayNameController,
+            cursorColor: Colors.black,
+            keyboardType: TextInputType.text,
+            decoration: InputDecoration(
+              icon: Icon(Icons.person, color: AppColor.blue),
+              hintText: 'Display Name',
+              labelText: 'Display Name',
+              errorText: msg,
+              labelStyle: TextStyle(color: AppColor.blue),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildPhoneField(SignInBloc bloc) {
+  Widget _buildPhoneField(SignUpBloc bloc) {
     return StreamProvider<String>.value(
       initialData: null,
       value: bloc.phoneStream,
@@ -134,7 +151,7 @@ class _SignInFormWidgetState extends State<SignInFormWidget> {
     );
   }
 
-  Widget _buildPassField(SignInBloc bloc) {
+  Widget _buildPassField(SignUpBloc bloc) {
     return StreamProvider<String>.value(
       initialData: null,
       value: bloc.passStream,
