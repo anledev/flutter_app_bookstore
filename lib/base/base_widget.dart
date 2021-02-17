@@ -21,6 +21,7 @@ class PageContainer extends StatelessWidget {
         ...bloc,
       ],
       child: Scaffold(
+        // resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: Text(
             title,
