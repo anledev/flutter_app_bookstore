@@ -4,11 +4,11 @@ import 'package:flutter_book_store_sample/base/base_bloc.dart';
 import 'package:flutter_book_store_sample/base/base_event.dart';
 import 'package:flutter_book_store_sample/data/repo/user_repo.dart';
 import 'package:flutter_book_store_sample/event/signup_event.dart';
-import 'package:flutter_book_store_sample/event/singin_event.dart';
+import 'package:flutter_book_store_sample/event/signin_event.dart';
 import 'package:flutter_book_store_sample/shared/validation.dart';
 import 'package:rxdart/rxdart.dart';
 
-class SignUpBloc extends BaseBloc {
+class SignUpBloc extends BaseBloc with ChangeNotifier{
   final _displayNameSubject = BehaviorSubject<String>();
   final _phoneSubject = BehaviorSubject<String>();
   final _passSubject = BehaviorSubject<String>();

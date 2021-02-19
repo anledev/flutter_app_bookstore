@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_book_store_sample/base/base_event.dart';
 import 'package:flutter_book_store_sample/base/base_widget.dart';
 import 'package:flutter_book_store_sample/data/remote/user_service.dart';
 import 'package:flutter_book_store_sample/data/repo/user_repo.dart';
 import 'package:flutter_book_store_sample/event/signup_event.dart';
+import 'package:flutter_book_store_sample/event/signup_fail_event.dart';
+import 'package:flutter_book_store_sample/event/signup_sucess_event.dart';
+import 'package:flutter_book_store_sample/module/home/home_page.dart';
 import 'package:flutter_book_store_sample/module/signup/signup_bloc.dart';
 import 'package:flutter_book_store_sample/shared/app_color.dart';
+import 'package:flutter_book_store_sample/shared/widget/bloc_listener.dart';
+import 'package:flutter_book_store_sample/shared/widget/loading_task.dart';
 import 'package:flutter_book_store_sample/shared/widget/normal_button.dart';
 import 'package:provider/provider.dart';
 
@@ -29,67 +35,82 @@ class SignUpPage extends StatelessWidget {
   }
 }
 
-class DemoDI {}
+class SignUpFormWidget extends StatefulWidget {
+  @override
+  _SignUpFormWidgetState createState() => _SignUpFormWidgetState();
+}
 
-class SignUpFormWidget extends StatelessWidget {
-  final TextEditingController _txtDisplayNameController = TextEditingController();
+class _SignUpFormWidgetState extends State<SignUpFormWidget> {
+  final TextEditingController _txtDisplayNameController =
+      TextEditingController();
+
   final TextEditingController _txtPhoneController = TextEditingController();
+
   final TextEditingController _txtPassController = TextEditingController();
+
+  handleEvent(BaseEvent event) {
+    if (event is SignUpSuccessEvent) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (BuildContext context) => HomePage()),
+        ModalRoute.withName('/home'),
+      );
+      return;
+    }
+
+    if (event is SignUpFailEvent) {
+      final snackBar = SnackBar(
+        content: Text(event.errMessage),
+        backgroundColor: Colors.red,
+      );
+      Scaffold.of(context).showSnackBar(snackBar);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Provider<SignUpBloc>.value(
-      value: SignUpBloc(userRepo: Provider.of(context)),
-      child: Consumer<SignUpBloc>(
-        builder: (context, bloc, child) => Container(
-          child: viewOriginTut(bloc),
-        ),
-      ),
-    );
+    return ChangeNotifierProvider(
+        create: (_) => SignUpBloc(userRepo: Provider.of(context)),
+        child: Consumer<SignUpBloc>(builder: (ctx, bloc, child) {
+          return BlocListener<SignUpBloc>(
+            listener: handleEvent,
+            child: LoadingTask(
+              bloc: bloc,
+              child: Container(
+                padding: EdgeInsets.all(25),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildDisplayNameField(bloc),
+                    _buildPhoneField(bloc),
+                    _buildPassField(bloc),
+                    _buildSignUpButton(bloc),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }));
   }
 
-  Widget viewOriginTut(SignUpBloc bloc) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildDisplayNameField(bloc),
-        _buildPhoneField(bloc),
-        _buildPassField(bloc),
-        _buildSignUpButton(bloc),
-        // _buildFooter()
-      ],
-    );
-  }
-
-  Widget _buildSignUpButton(SignUpBloc bloc){
+  Widget _buildSignUpButton(SignUpBloc bloc) {
     return StreamProvider<bool>.value(
       initialData: false,
       value: bloc.btnStream,
       child: Consumer<bool>(
         builder: (context, enable, child) => NormalButton(
           title: 'Sign Up',
-          onPressed: enable ? () {
-            bloc.event.add(
-              SignUpEvent(
-                displayName: _txtDisplayNameController.text,
-                phone: _txtPhoneController.text,
-                pass: _txtPassController.text,
-              ),
-            );
-          } : null,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFooter() {
-    return GestureDetector(
-      child: Container(
-        margin: EdgeInsets.only(top: 30),
-        padding: EdgeInsets.all(10),
-        child: Text(
-          'Register Account',
-          style: TextStyle(color: AppColor.blue, fontSize: 19),
+          onPressed: enable
+              ? () {
+                  bloc.event.add(
+                    SignUpEvent(
+                      displayName: _txtDisplayNameController.text,
+                      phone: _txtPhoneController.text,
+                      pass: _txtPassController.text,
+                    ),
+                  );
+                }
+              : null,
         ),
       ),
     );
@@ -156,7 +177,7 @@ class SignUpFormWidget extends StatelessWidget {
       initialData: null,
       value: bloc.passStream,
       child: Consumer<String>(
-        builder: (context, msg, child) =>  Container(
+        builder: (context, msg, child) => Container(
           margin: EdgeInsets.only(bottom: 25),
           child: TextField(
             textInputAction: TextInputAction.done,

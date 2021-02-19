@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_book_store_sample/base/base_event.dart';
 import 'package:flutter_book_store_sample/base/base_widget.dart';
 import 'package:flutter_book_store_sample/data/remote/user_service.dart';
 import 'package:flutter_book_store_sample/data/repo/user_repo.dart';
-import 'package:flutter_book_store_sample/event/singin_event.dart';
+import 'package:flutter_book_store_sample/event/signin_event.dart';
+import 'package:flutter_book_store_sample/event/signin_fail_event.dart';
+import 'package:flutter_book_store_sample/event/signin_sucess_event.dart';
 import 'package:flutter_book_store_sample/module/signin/signin_bloc.dart';
 import 'package:flutter_book_store_sample/shared/app_color.dart';
+import 'package:flutter_book_store_sample/shared/widget/bloc_listener.dart';
+import 'package:flutter_book_store_sample/shared/widget/loading_task.dart';
 import 'package:flutter_book_store_sample/shared/widget/normal_button.dart';
 import 'package:provider/provider.dart';
 
@@ -41,15 +46,39 @@ class _SignInFormWidgetState extends State<SignInFormWidget> {
 
   final TextEditingController _txtPassController = TextEditingController();
 
+  handleEvent(BaseEvent event) {
+    if (event is SignInSuccessEvent) {
+      Navigator.pushReplacementNamed(context, '/home');
+      return;
+    }
+
+    if (event is SignInFailEvent) {
+      final snackBar = SnackBar(
+        content: Text(event.errMessage),
+        backgroundColor: Colors.red,
+      );
+      Scaffold.of(context).showSnackBar(snackBar);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     print('rebuild');
-    return Provider<SignInBloc>.value(
-      value: SignInBloc(userRepo: Provider.of(context)),
+    return ChangeNotifierProvider(
+      create: (_) => SignInBloc(userRepo: Provider.of(context)),
       child: Consumer<SignInBloc>(
-        builder: (context, bloc, child) => Container(
-          child: viewOriginTut(context, bloc),
-        ),
+        builder: (context, bloc, child) {
+          return BlocListener<SignInBloc>(
+            listener: handleEvent,
+            child: LoadingTask(
+              bloc: bloc,
+              child: Container(
+                padding: EdgeInsets.all(25),
+                child: viewOriginTut(context, bloc),
+              ),
+            ),
+          );
+        }
       ),
     );
   }

@@ -3,12 +3,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_book_store_sample/base/base_bloc.dart';
 import 'package:flutter_book_store_sample/base/base_event.dart';
 import 'package:flutter_book_store_sample/data/repo/user_repo.dart';
+import 'package:flutter_book_store_sample/event/signin_fail_event.dart';
+import 'package:flutter_book_store_sample/event/signin_sucess_event.dart';
 import 'package:flutter_book_store_sample/event/signup_event.dart';
-import 'package:flutter_book_store_sample/event/singin_event.dart';
+import 'package:flutter_book_store_sample/event/signin_event.dart';
 import 'package:flutter_book_store_sample/shared/validation.dart';
 import 'package:rxdart/rxdart.dart';
 
-class SignInBloc extends BaseBloc {
+class SignInBloc extends BaseBloc with ChangeNotifier{
   final _phoneSubject = BehaviorSubject<String>();
   final _passSubject = BehaviorSubject<String>();
   final _btnSubject = BehaviorSubject<bool>();
@@ -71,15 +73,25 @@ class SignInBloc extends BaseBloc {
   }
 
   handleSignIn(event) {
-    SignInEvent e = event as SignInEvent;
-    _userRepo.signIn(e.phone, e.pass).then(
-      (userData) {
-        print(userData);
-      },
-      onError: (e) {
-        print(e);
-      },
-    );
+    btnSink.add(false); //Khi bắt đầu call api thì disable nút sign-in
+    loadingSink.add(true); // show loading
+
+    Future.delayed(Duration(seconds: 4), () {
+      SignInEvent e = event as SignInEvent;
+      _userRepo.signIn(e.phone, e.pass).then(
+            (userData) {
+              processEventSink.add(SignInSuccessEvent(userData));
+          print(userData);
+        },
+        onError: (e) {
+          print(e);
+          btnSink.add(true); //Khi có kết quả thì enable nút sign-in trở lại
+          loadingSink.add(false); // hide loading
+          processEventSink
+              .add(SignInFailEvent(e.toString())); // thông báo kết quả
+        },
+      );
+    });
   }
 
   handleSignUp(event) {}
@@ -88,6 +100,8 @@ class SignInBloc extends BaseBloc {
   void dispose() {
     // TODO: implement dispose
     super.dispose();
+    print("singin close");
+
     _phoneSubject.close();
     _passSubject.close();
     _btnSubject.close();
